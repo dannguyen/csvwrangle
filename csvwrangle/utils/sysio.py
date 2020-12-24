@@ -1,8 +1,9 @@
+import click
 import json
 import sys
 from typing import Any as AnyType, Mapping as MappingType, NoReturn as NoReturnType
 
-import click
+from csvwrangle import __version__
 
 
 def clout(*args, use_stderr: bool = False) -> NoReturnType:
@@ -23,3 +24,17 @@ def clexit(code: int, message: AnyType = None):
     if message:
         clerr(message)
     sys.exit(code)
+
+
+def print_version(ctx=None, param=None, value=None) -> NoReturnType:
+    """
+    https://click.palletsprojects.com/en/3.x/options/#callbacks-and-eager-options
+    """
+    if not ctx:
+        clout(__version__)
+    else:
+        # this is being used as a callback
+        if not value or ctx.resilient_parsing:
+            return
+        clout(__version__)
+        ctx.exit()

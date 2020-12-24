@@ -16,7 +16,7 @@ def test_no_options_just_input_file():
     """
     note how `code` is inferred to be numerical, and `costs` are floats, e.g. -7 is -7.0
     """
-    result = CliRunner().invoke(cli, ["examples/hi.csv"])
+    result = CliRunner(mix_stderr=False).invoke(cli, ["examples/hi.csv"])
     assert result.output.splitlines() == [
         "code,region,costs",
         "1,east,-7.0",
