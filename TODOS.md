@@ -1,8 +1,9 @@
 # TODOS
 
 > ### Current status
->
-> - need to figure out how the F to make a custom param that builds a common list of tuples
+> - migrated `--zed` system to proper `--query,--dropna,--sortby` options
+>   - zed tests moved to ZUNK
+>   - tests/ops/test_dropna.py is currently failing the most basic test
 > - figure out more pandas functionality to add
 
 ### References/things to read
@@ -15,6 +16,9 @@
 
 - [x] basic implementation of `extract_ops_from_raw_args()`
 - rewrite CFrame to accept the extract_ops result
+
+## ots: dropna
+- [ ] user cannot pass in empty string; instead, pass in '*' to signify "ALL columns"
 
 ## ots: sed
 - https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.replace.html
@@ -36,19 +40,24 @@
 - import stuff
     - [ ] let user specify data types
 
+- make Click.Option subclass for operation specific flags
+
 ## --verbose
 
 - output the name/expr of each op, and the effect on the dataset, to stderr
 
 
 ## --zeta option
-
 - replace `--zeta [foo] [expr]` option with proper `--query` `--sort` etc
+
+
+## --info option
+- print df.dtype / df.info
+
 
 
 ## supported ops
 
-- 
 
 ### groupby
 - https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.groupby.html

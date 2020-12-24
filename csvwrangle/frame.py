@@ -9,11 +9,28 @@ from typing import (
     Union as UnionType,
 )
 
+from csvwrangle.op import Operation
+
 
 class CFrame:
     def __init__(self, input_file: UnionType[str, Path], options: DictType = {}):
         self.input_file = input_file
         self._dataframe = pd.read_csv(self.input_file)
+
+    def execute(self, op: Operation) -> NoReturnType:
+        """operations are assumed to be inplace functions"""
+        op.func_apply(self.df)
+
+    @property
+    def df(self) -> pd.DataFrame:
+        return self._dataframe
+
+    @df.setter
+    def df(self, new_df: pd.DataFrame) -> NoReturnType:
+        self._dataframe = new_df
+
+    def to_csv(self) -> str:
+        return self.df.to_csv(index=False)
 
     def process_pipes(self, ops_list: ListType):
         tx = self.df  # TK: should be handled with a CFrame helper method
@@ -30,13 +47,6 @@ class CFrame:
                 tx.to_csv(index=False),
                 pop.metatext,
             )
-
-    @property
-    def df(self) -> pd.DataFrame:
-        return self._dataframe
-
-    def to_csv(self) -> str:
-        return self.df.to_csv(index=False)
 
 
 # TK: to be in its own file

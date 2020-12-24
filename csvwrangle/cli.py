@@ -11,6 +11,7 @@ from typing import (
 
 
 from csvwrangle.frame import CFrame
+from csvwrangle.op import build_operation
 from csvwrangle.utils.sysio import clout, clerr, print_version
 
 OPS_PARAMS = []
@@ -18,30 +19,48 @@ OPS_PARAMS = []
 
 class OpThing(click.ParamType):
     def convert(self, value, param, ctx):
-        OPS_PARAMS.append((param, value))
+        ctx.obj = ctx.obj or []
+        ctx.obj.append((param, value))
         # OPS_LIST.append({
         #         'name': param.name, 'args': value
         #     })
         return value
 
 
-def collect_ops(ctx=None, param=None, values=None):
-    """
-    TK: this is just a placeholder until I figure out how to properly subclass Click stuff
-    """
-    if not ctx.obj:
-        ctx.obj = []
+# def collect_ops(ctx=None, param=None, values=None):
+#     """
+#     TK: this is just a placeholder until I figure out how to properly subclass Click stuff
+#     """
+#     if not ctx.obj:
+#         ctx.obj = []
 
-    for v in values:
-        ctx.obj.append({"name": v[0], "expr": v[1]})
+#     for v in values:
+#         ctx.obj.append({"name": v[0], "expr": v[1]})
 
-    return values
+#     return values
 
 
-@click.command(no_args_is_help=True, epilog="the end...?")
+@click.command(
+    epilog="the end...?",
+    no_args_is_help=True,
+)
+@click.option(
+    "--dropna",
+    metavar="dropna",
+    nargs=1,
+    type=OpThing(),
+    multiple=True,
+    help="""Do a pandas.DataFrame.replace:""",
+)
+@click.option(
+    "--sed",
+    metavar="sed",
+    type=OpThing(),
+    multiple=True,
+    help="""Do a pandas.DataFrame.replace:""",
+)
 @click.option(
     "--sortby",
-    "-s",
     metavar="sortby",
     type=OpThing(),
     multiple=True,
@@ -62,14 +81,6 @@ def collect_ops(ctx=None, param=None, values=None):
     is_flag=True,
     help="Print the version of csvwrangle",
 )
-@click.option(
-    "-z",
-    "--zed",
-    multiple=True,
-    nargs=2,  # TK this needs to be varidic by op type
-    callback=collect_ops,
-    help="a pandas.Dataframe function and expr, e.g. 'query' 'costs>5' ",
-)
 @click.argument(
     "input_file",
     type=click.Path(
@@ -84,39 +95,35 @@ def main(ctx, **kwargs):
     """
     csvwrangle (cvr) is a command-line tool for wrangling data with Pandas
     """
-    click.secho(f'opening {kwargs["input_file"]}...', err=True, fg="red")
+    ctx.obj = ctx.obj or []
+
+    # click.secho(f'opening {kwargs["input_file"]}...', err=True, fg="red")
     cf = CFrame(kwargs["input_file"])
-    data: str = ""
-    meta: str = ""
+    # click.secho("Original data", fg="green", err=True)
+    # click.secho(cf.to_csv(), fg="cyan", err=True)
 
-    opslist = extract_ops_from_raw_args()
-    click.secho(str(opslist), fg="red", err=True)
+    # get the ops
+    opslist = extract_ops_from_raw_args(ops_params=ctx.obj, cargs=sys.argv.copy())
+    # click.secho(f"{len(opslist)} operations", fg="red", err=True)
 
-    OLDOPTS = ctx.obj
-    for i, result in enumerate(cf.process_pipes(OLDOPTS)):
-        if i > 0:
-            click.secho(meta, fg="green", err=True)
-            click.secho(data, fg="cyan", err=True)
+    for x in opslist:
+        op = build_operation(name=x["name"], op_args=x["op_args"])
+        #        click.secho(str(op), fg="cyan", err=True)
+        cf.execute(op)
+        #  click.secho(cf.to_csv(), fg="cyan", err=True)
 
-        data, meta = result
-
-    # at end of the loop, data is the final iteration of the data
-    fin_meta = meta if meta else "No operations"
-    fin_data = data if data else cf.to_csv()
-
-    click.secho(fin_meta, fg="green", err=True)
-    click.secho(fin_data, nl=False)
+    # click.secho("Final", fg="green", err=True)
+    click.secho(cf.to_csv(), nl=False)
 
 
-def extract_ops_from_raw_args() -> ListType[dict]:
-    cargs = sys.argv.copy()
+def extract_ops_from_raw_args(ops_params: list, cargs: str) -> ListType[dict]:
     opslist = []
-    for o in OPS_PARAMS:
+    for o in ops_params:
         param, value = o
         # next(i for i, x in enumerate(raw_args) if raw_args[i] in param.opts and param.name == raw_args[i+1])
         for i, a in enumerate(cargs):
             if a in param.opts and value == cargs[i + 1]:
-                d = {"name": param.name, "args": value, "index": i}
+                d = {"name": param.name, "op_args": value, "index": i}
                 opslist.append(d)
     opslist = sorted(opslist, key=lambda o: o["index"])
 
@@ -128,7 +135,14 @@ if __name__ == "__main__":
 
 
 # OPS_LIST = []
-
+# @click.option(
+#     "-z",
+#     "--zed",
+#     multiple=True,
+#     nargs=2,  # TK this needs to be varidic by op type
+#     callback=collect_ops,
+#     help="a pandas.Dataframe function and expr, e.g. 'query' 'costs>5' ",
+# )
 
 # class OpsList(click.ParamType):
 #     name = 'ops-list'
