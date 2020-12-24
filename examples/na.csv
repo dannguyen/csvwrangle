@@ -1,0 +1,5 @@
+code,region,costs
+01,east,10
+,west,20
+03,,42.5
+04,east,
