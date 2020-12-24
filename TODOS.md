@@ -11,12 +11,16 @@
 
 ----------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------
+## better options/zed bye bye
+
+- [x] basic implementation of `extract_ops_from_raw_args()`
+- rewrite CFrame to accept the extract_ops result
 
 ## ots: sed
 - https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.replace.html
 - use replace.regex
 - [x] basic: `--sed to_replace//new_value`
-- [ ] by column: `--sed to_replace//new_val//colnames`
+- [x] by column: `--sed to_replace//new_val//colnames`
 - maybe call it "replace"?
 - remove dumb `//` hack delimiter
 
@@ -31,7 +35,6 @@
 
 - import stuff
     - [ ] let user specify data types
-
 
 ## --verbose
 

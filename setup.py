@@ -10,12 +10,11 @@ with open("README.rst") as readme_file:
 
 import csvwrangle as SETTINGS
 
-
 install_requirements = [
     "Click>=7.0",
     "pandas>=1.1",
-
 ]
+
 setup_requirements = [
     "pytest-runner",
 ]

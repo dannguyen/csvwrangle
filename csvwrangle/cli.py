@@ -13,6 +13,17 @@ from typing import (
 from csvwrangle.frame import CFrame
 from csvwrangle.utils.sysio import clout, clerr, print_version
 
+OPS_PARAMS = []
+
+
+class OpThing(click.ParamType):
+    def convert(self, value, param, ctx):
+        OPS_PARAMS.append((param, value))
+        # OPS_LIST.append({
+        #         'name': param.name, 'args': value
+        #     })
+        return value
+
 
 def collect_ops(ctx=None, param=None, values=None):
     """
@@ -28,6 +39,22 @@ def collect_ops(ctx=None, param=None, values=None):
 
 
 @click.command(no_args_is_help=True, epilog="the end...?")
+@click.option(
+    "--sortby",
+    "-s",
+    metavar="sortby",
+    type=OpThing(),
+    multiple=True,
+    help="""Do a pandas.DataFrame.sort_values:""",
+)
+@click.option(
+    "--query",
+    "-q",
+    metavar="query",
+    type=OpThing(),
+    multiple=True,
+    help="""Do a pandas.DataFrame.query:""",
+)
 @click.option(
     "--version",
     callback=print_version,
@@ -45,7 +72,11 @@ def collect_ops(ctx=None, param=None, values=None):
 )
 @click.argument(
     "input_file",
-    type=click.File("r"),
+    type=click.Path(
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+    ),
     required=True,
 )
 @click.pass_context
@@ -53,13 +84,16 @@ def main(ctx, **kwargs):
     """
     csvwrangle (cvr) is a command-line tool for wrangling data with Pandas
     """
-    click.secho(f'opening {kwargs["input_file"].name}...', err=True, fg="red")
+    click.secho(f'opening {kwargs["input_file"]}...', err=True, fg="red")
     cf = CFrame(kwargs["input_file"])
     data: str = ""
     meta: str = ""
 
-    ops_list = ctx.obj
-    for i, result in enumerate(cf.process_pipes(ops_list)):
+    opslist = extract_ops_from_raw_args()
+    click.secho(str(opslist), fg="red", err=True)
+
+    OLDOPTS = ctx.obj
+    for i, result in enumerate(cf.process_pipes(OLDOPTS)):
         if i > 0:
             click.secho(meta, fg="green", err=True)
             click.secho(data, fg="cyan", err=True)
@@ -72,6 +106,21 @@ def main(ctx, **kwargs):
 
     click.secho(fin_meta, fg="green", err=True)
     click.secho(fin_data, nl=False)
+
+
+def extract_ops_from_raw_args() -> ListType[dict]:
+    cargs = sys.argv.copy()
+    opslist = []
+    for o in OPS_PARAMS:
+        param, value = o
+        # next(i for i, x in enumerate(raw_args) if raw_args[i] in param.opts and param.name == raw_args[i+1])
+        for i, a in enumerate(cargs):
+            if a in param.opts and value == cargs[i + 1]:
+                d = {"name": param.name, "args": value, "index": i}
+                opslist.append(d)
+    opslist = sorted(opslist, key=lambda o: o["index"])
+
+    return opslist
 
 
 if __name__ == "__main__":

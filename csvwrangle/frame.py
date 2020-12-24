@@ -44,6 +44,7 @@ class PipedOp:
     """
     This class should handle simple transformations, e.g. NOT groupby, join, pivot, etc
     """
+
     def __init__(self, name: str, args: str) -> CallableType:
         self.name = name
         self.args = args
@@ -63,10 +64,12 @@ class PipedOp:
         elif self.name == "sed":
             rx, rval, *cols = self.args.split("//")
             if cols:
-                cols = cols[0].split(',')
-                to_reps:dict = {cname: rx for cname in cols}
-                to_vals:dict = {cname: rval for cname in cols}
-                foo = lambda df: df.replace(to_replace=to_reps, value=to_vals, regex=True, inplace=True)
+                cols = cols[0].split(",")
+                to_reps: dict = {cname: rx for cname in cols}
+                to_vals: dict = {cname: rval for cname in cols}
+                foo = lambda df: df.replace(
+                    to_replace=to_reps, value=to_vals, regex=True, inplace=True
+                )
             else:
                 foo = lambda df: df.replace(regex=rx, value=rval, inplace=True)
 

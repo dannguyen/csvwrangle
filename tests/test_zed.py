@@ -56,18 +56,18 @@ def test_zed_sed_default():
     ]
 
 
-
 def test_zed_sed_on_cols():
     args = ["examples/tings3.csv", "-z", "sed", r"[A-Z]//X//alias,id"]
     res = runclick(args)
     assert res.stdout.splitlines() == [
-"id,name,alias",
-"1X,Alice,Xlpha X0g",
-"2X,Bob,burgerman",
-"3X,Carson,90-210-XXX",
-"4X,Dina,Xinosaur",
-"5X,Ellie,Xlle",
-   ]
+        "id,name,alias",
+        "1X,Alice,Xlpha X0g",
+        "2X,Bob,burgerman",
+        "3X,Carson,90-210-XXX",
+        "4X,Dina,Xinosaur",
+        "5X,Ellie,Xlle",
+    ]
+
 
 # "id,name,alias",
 # "1A,Alice,Alpha D0g",
