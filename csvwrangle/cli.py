@@ -6,6 +6,7 @@ import sys
 from typing import (
     NoReturn as NoReturnType,
     List as ListType,
+    Optional as OptionalType,
     Union as UnionType,
 )
 
@@ -15,6 +16,23 @@ from csvwrangle.op import build_operation
 from csvwrangle.utils.sysio import clout, clerr, print_version
 
 OPS_PARAMS = []
+
+
+class WrangleCommand(click.Command):
+    def main(
+        self,
+        args=None,
+        prog_name=None,
+        complete_var=None,
+        standalone_mode=True,
+        **extra,
+    ):
+
+        if args is None:
+            self.orgargs = sys.argv[1:]
+        else:
+            self.orgargs = list(args)
+        return super().main(args, prog_name, complete_var, standalone_mode, **extra)
 
 
 class OpThing(click.ParamType):
@@ -41,8 +59,17 @@ class OpThing(click.ParamType):
 
 
 @click.command(
+    cls=WrangleCommand,
     epilog="the end...?",
     no_args_is_help=True,
+)
+@click.option(
+    "--hello",
+    metavar="hello",
+    nargs=1,
+    type=OpThing(),
+    multiple=True,
+    help="""nullfun""",
 )
 @click.option(
     "--dropna",
@@ -83,12 +110,12 @@ class OpThing(click.ParamType):
 )
 @click.argument(
     "input_file",
-    type=click.Path(
-        exists=True,
-        file_okay=True,
-        dir_okay=False,
-    ),
+    type=click.File("r"),
+    default=sys.stdin,
     required=True,
+    # exists=True,
+    # file_okay=True,
+    # dir_okay=False,
 )
 @click.pass_context
 def main(ctx, **kwargs):
@@ -103,9 +130,10 @@ def main(ctx, **kwargs):
     # click.secho(cf.to_csv(), fg="cyan", err=True)
 
     # get the ops
-    opslist = extract_ops_from_raw_args(ops_params=ctx.obj, cargs=sys.argv.copy())
+    opslist = extract_ops_from_raw_args(
+        ops_params=ctx.obj, cargs=ctx.command.orgargs.copy()
+    )
     # click.secho(f"{len(opslist)} operations", fg="red", err=True)
-
     for x in opslist:
         op = build_operation(name=x["name"], op_args=x["op_args"])
         #        click.secho(str(op), fg="cyan", err=True)
@@ -113,7 +141,7 @@ def main(ctx, **kwargs):
         #  click.secho(cf.to_csv(), fg="cyan", err=True)
 
     # click.secho("Final", fg="green", err=True)
-    click.secho(cf.to_csv(), nl=False)
+    click.echo(cf.to_csv(), nl=False)
 
 
 def extract_ops_from_raw_args(ops_params: list, cargs: str) -> ListType[dict]:

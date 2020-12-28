@@ -1,10 +1,15 @@
 # TODOS
 
-> ### Current status
-> - migrated `--zed` system to proper `--query,--dropna,--sortby` options
->   - zed tests moved to ZUNK
->   - tests/ops/test_dropna.py is currently failing the most basic test
-> - figure out more pandas functionality to add
+### Current status
+- migrated `--zed` system to proper `--query,--dropna,--sortby` options
+  - zed tests moved to ZUNK
+    - finish porting zed tests
+  - [x] tests/ops/test_dropna.py is currently failing the most basic test
+  - [x] **tests/test_cli:test_hello indicates that context isn't being shared as expected...**
+    - because when running pytest, sys.argv will be: `['pytest', 'tests/test_cli.py', '-v']` 
+    - [x] resolved: created custom WrangleCommand that has orgargs (will ask in Click github issues)
+- figure out more pandas functionality to add
+
 
 ### References/things to read
 - https://medium.com/towards-artificial-intelligence/how-i-wrangle-data-at-the-command-line-17ad48faf699

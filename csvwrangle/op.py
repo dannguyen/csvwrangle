@@ -34,24 +34,15 @@ class Operation:
 class BaseOp(Operation):
     pass
 
-    # if self.name == "dropna":
-    #     cols = self.args.split(",") if self.args else None
-    #     foo = lambda df: df.dropna(subset=cols, inplace=True)
 
-    # elif self.name == "query":
-    #     foo = lambda df: df.query(expr=self.args, inplace=True)
+class Hello(BaseOp):
+    name = "hello"
 
-    # elif self.name == "sed":
-    #     rx, rval, *cols = self.args.split("//")
-    #     if cols:
-    #         cols = cols[0].split(",")
-    #         to_reps: dict = {cname: rx for cname in cols}
-    #         to_vals: dict = {cname: rval for cname in cols}
-    #         foo = lambda df: df.replace(
-    #             to_replace=to_reps, value=to_vals, regex=True, inplace=True
-    #         )
-    #     else:
-    #         foo = lambda df: df.replace(regex=rx, value=rval, inplace=True)
+    def func_apply(self, df):
+        df.drop(columns=df.columns, inplace=True)
+        df.drop(df.index, inplace=True)
+        df.insert(0, "axe", ["hello", "world"])
+        df.insert(1, "bee", [98, 12])
 
 
 class Dropna(BaseOp):

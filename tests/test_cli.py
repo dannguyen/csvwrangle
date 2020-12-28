@@ -33,3 +33,12 @@ def test_dropna_but_pointless():
         "1,east,-7.0",
         "2,west,42.5",
     ]
+
+
+def test_hello():
+    result = runcli(["--hello", "BLANK", "examples/hi.csv"])
+    assert result.output.splitlines() == [
+        "axe,bee",
+        "hello,98",
+        "world,12",
+    ]
