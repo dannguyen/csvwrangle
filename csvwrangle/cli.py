@@ -1,5 +1,6 @@
 import click
-import pandas as pd  # TK: kill this after CFrame is implemented
+
+#  import pandas as pd  # TK: kill this after CFrame is implemented
 from pathlib import Path
 import re
 import sys
@@ -36,26 +37,14 @@ class WrangleCommand(click.Command):
 
 
 class OpThing(click.ParamType):
-    def convert(self, value, param, ctx):
-        ctx.obj = ctx.obj or []
-        ctx.obj.append((param, value))
-        # OPS_LIST.append({
-        #         'name': param.name, 'args': value
-        #     })
-        return value
-
-
-# def collect_ops(ctx=None, param=None, values=None):
-#     """
-#     TK: this is just a placeholder until I figure out how to properly subclass Click stuff
-#     """
-#     if not ctx.obj:
-#         ctx.obj = []
-
-#     for v in values:
-#         ctx.obj.append({"name": v[0], "expr": v[1]})
-
-#     return values
+    pass
+    # def convert(self, value, param, ctx):
+    #     ctx.obj = ctx.obj or []
+    #     ctx.obj.append((param, value))
+    #     # OPS_LIST.append({
+    #     #         'name': param.name, 'args': value
+    #     #     })
+    #     return value
 
 
 @click.command(
@@ -80,10 +69,11 @@ class OpThing(click.ParamType):
     help="""Do a pandas.DataFrame.replace:""",
 )
 @click.option(
-    "--sed",
-    metavar="sed",
+    "--replacex",
+    metavar="replacex",
     type=OpThing(),
     multiple=True,
+    nargs=3,
     help="""Do a pandas.DataFrame.replace:""",
 )
 @click.option(
@@ -122,17 +112,15 @@ def main(ctx, **kwargs):
     """
     csvwrangle (cvr) is a command-line tool for wrangling data with Pandas
     """
-    ctx.obj = ctx.obj or []
+    # import IPython; IPython.embed()
 
     # click.secho(f'opening {kwargs["input_file"]}...', err=True, fg="red")
     cf = CFrame(kwargs["input_file"])
     # click.secho("Original data", fg="green", err=True)
     # click.secho(cf.to_csv(), fg="cyan", err=True)
 
-    # get the ops
-    opslist = extract_ops_from_raw_args(
-        ops_params=ctx.obj, cargs=ctx.command.orgargs.copy()
-    )
+    opslist = extract_ops_from_raw_args(ctx=ctx, raw_args=ctx.command.orgargs.copy())
+
     # click.secho(f"{len(opslist)} operations", fg="red", err=True)
     for x in opslist:
         op = build_operation(name=x["name"], op_args=x["op_args"])
@@ -144,63 +132,19 @@ def main(ctx, **kwargs):
     click.echo(cf.to_csv(), nl=False)
 
 
-def extract_ops_from_raw_args(ops_params: list, cargs: str) -> ListType[dict]:
+def extract_ops_from_raw_args(ctx, raw_args: ListType) -> ListType[dict]:
     opslist = []
-    for o in ops_params:
-        param, value = o
-        # next(i for i, x in enumerate(raw_args) if raw_args[i] in param.opts and param.name == raw_args[i+1])
-        for i, a in enumerate(cargs):
-            if a in param.opts and value == cargs[i + 1]:
-                d = {"name": param.name, "op_args": value, "index": i}
-                opslist.append(d)
-    opslist = sorted(opslist, key=lambda o: o["index"])
+    cmd_options = [o for o in ctx.command.params if isinstance(o.type, OpThing)]
+
+    for i, rawarg in enumerate(raw_args):
+        the_param = next((c for c in cmd_options if rawarg in c.opts), None)
+        if the_param:
+            the_args = raw_args[i + 1 : i + 1 + the_param.nargs]
+            d = {"name": the_param.name, "op_args": the_args, "index": i}
+            opslist.append(d)
 
     return opslist
 
 
 if __name__ == "__main__":
     sys.exit(main())  # pragma: no cover
-
-
-# OPS_LIST = []
-# @click.option(
-#     "-z",
-#     "--zed",
-#     multiple=True,
-#     nargs=2,  # TK this needs to be varidic by op type
-#     callback=collect_ops,
-#     help="a pandas.Dataframe function and expr, e.g. 'query' 'costs>5' ",
-# )
-
-# class OpsList(click.ParamType):
-#     name = 'ops-list'
-
-#     def __init__(self, stash:ListType):
-#         self.stash = stash
-#         super().__init__()
-
-#     def convert(self, value, param, ctx):
-#         self.stash.append({'op': param.name, 'expr': value})
-#         return value
-
-# @click.option(
-#     "--sort",
-#     "-s",
-#     type=click.STRING,
-#     # type=OpsList(OPS_LIST),
-#     multiple=True,
-#     help="""
-#     Do a pandas.DataFrame.sort_values:
-#     """,
-# )
-# @click.option(
-#     "--query",
-#     "-q",
-#     type=click.STRING,
-#     # type=OpsList(OPS_LIST),
-#     multiple=True,
-#     help="""
-#     Do a pandas.DataFrame.query:
-#     https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html
-#     """,
-# )

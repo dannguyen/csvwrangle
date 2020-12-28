@@ -49,7 +49,8 @@ class Dropna(BaseOp):
     name = "dropna"
 
     def func_apply(self, df: pd.DataFrame) -> NoReturnType:
-        cols = self.op_args.split(",") if self.op_args else None
+        arg = self.op_args[0]
+        cols = None if arg == "*" else arg.split(",")
         df.dropna(subset=cols, inplace=True)
 
 
@@ -57,23 +58,24 @@ class Query(BaseOp):
     name = "query"
 
     def func_apply(self, df: pd.DataFrame) -> NoReturnType:
-        df.query(expr=self.op_args, inplace=True)
+        expr, *tkargs = self.op_args
+        df.query(expr=expr, inplace=True)
 
 
-class Sed(BaseOp):
-    name = "sed"
+class Replacex(BaseOp):
+    name = "replacex"
 
     def func_apply(self, df: pd.DataFrame) -> NoReturnType:
-        rx, rval, *cols = self.op_args.split("//")
-        if cols:
-            cols = cols[0].split(",")
+        rx, rval, cols = self.op_args
+        if cols == "*":
+            func = lambda df: df.replace(regex=rx, value=rval, inplace=True)
+        else:
+            cols = cols.split(",")
             to_reps: dict = {cname: rx for cname in cols}
             to_vals: dict = {cname: rval for cname in cols}
             func = lambda df: df.replace(
                 to_replace=to_reps, value=to_vals, regex=True, inplace=True
             )
-        else:
-            func = lambda df: df.replace(regex=rx, value=rval, inplace=True)
 
         func(df)
 
@@ -82,9 +84,10 @@ class Sortby(BaseOp):
     name = "sortby"
 
     def func_apply(self, df: pd.DataFrame) -> NoReturnType:
+
         cols = []
         ascs = []
-        for arg in self.op_args.split(","):
+        for arg in self.op_args[0].split(","):
             c, *a = arg.split(":", 1)
             cols.append(c)
             a = a[0] if a else "asc"

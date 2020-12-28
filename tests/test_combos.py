@@ -5,8 +5,10 @@ from tests.tutils import runcli
 def test_zed_multifoo():
     args = [
         "examples/fruits.csv",
-        "--sed",
-        r"ora\w+//citrus",
+        "--replacex",
+        r"ora\w+",
+        "citrus",
+        "*",
         "--query",
         "product == 'citrus' | revenue > 100",
         "--sortby",

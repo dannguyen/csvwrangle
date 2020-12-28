@@ -33,11 +33,11 @@ def test_dropna_no_matches():
     ]
 
 
-def test_dropna_any_default():
+def test_dropna_any_star():
     """with no column arg, any row in which ANY column is NA is dropped"""
     args = [
         "--dropna",
-        "",
+        "*",
         "examples/na.csv",
     ]
     res = runcli(args)

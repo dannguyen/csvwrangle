@@ -1,13 +1,8 @@
 # TODOS
 
 ### Current status
-- migrated `--zed` system to proper `--query,--dropna,--sortby` options
-  - zed tests moved to ZUNK
-    - finish porting zed tests
-  - [x] tests/ops/test_dropna.py is currently failing the most basic test
-  - [x] **tests/test_cli:test_hello indicates that context isn't being shared as expected...**
-    - because when running pytest, sys.argv will be: `['pytest', 'tests/test_cli.py', '-v']` 
-    - [x] resolved: created custom WrangleCommand that has orgargs (will ask in Click github issues)
+- fixed cli.main to handle options with more than 1 arg
+    - OpThing is now a custom but functionally empty ParamType subclass
 - figure out more pandas functionality to add
 
 
@@ -23,14 +18,14 @@
 - rewrite CFrame to accept the extract_ops result
 
 ## ots: dropna
-- [ ] user cannot pass in empty string; instead, pass in '*' to signify "ALL columns"
+- [x] user cannot pass in empty string; instead, pass in '*' to signify "ALL columns"
 
 ## ots: sed
 - https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.replace.html
 - use replace.regex
 - [x] basic: `--sed to_replace//new_value`
 - [x] by column: `--sed to_replace//new_val//colnames`
-- maybe call it "replace"?
+- maybe call it "replacex"?
 - remove dumb `//` hack delimiter
 
 ## CFrame
@@ -72,7 +67,20 @@
 - should be a post 1.0 feature
 - should likely have its own "Op" class
 
+
+
+### unlikely to do
+
+- rename(cols)
+- grep: select rows by regex pattern 
+    - filter(regex='REGEX', axis=0) 
+    - https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.str.contains.html
+    - this will require some manual work...
+
+
+
 ### done
+
 
 - query: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html
 - dropna: 
@@ -86,14 +94,10 @@
     - https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.sort_values.html
     - [x] `--sortby col1:asc,col2:desc`
 
-### unlikely to do
-
-- rename(cols)
-- grep: select rows by regex pattern 
-    - filter(regex='REGEX', axis=0) 
-    - https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.str.contains.html
-    - this will require some manual work...
-
-
-
-
+- migrated `--zed` system to proper `--query,--dropna,--sortby` options
+  - zed tests moved to ZUNK
+    - [x] finish porting zed tests
+  - [x] tests/ops/test_dropna.py is currently failing the most basic test
+  - [x] **tests/test_cli:test_hello indicates that context isn't being shared as expected...**
+    - because when running pytest, sys.argv will be: `['pytest', 'tests/test_cli.py', '-v']` 
+    - [x] resolved: created custom WrangleCommand that has orgargs (will ask in Click github issues)

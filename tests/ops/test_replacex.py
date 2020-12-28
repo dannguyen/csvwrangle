@@ -3,7 +3,7 @@ from tests.tutils import runcli
 
 
 def test_sed_default():
-    args = ["examples/tings2.csv", "--sed", r"\d+|\w{5,}//HEY"]
+    args = ["examples/tings2.csv", "--replacex", r"\d+|\w{5,}", "HEY", "*"]
     res = runcli(args)
     assert res.stdout.splitlines() == [
         "name,alias",
@@ -16,7 +16,7 @@ def test_sed_default():
 
 
 def test_sed_on_cols():
-    args = ["examples/tings3.csv", "--sed", r"[A-Z]//X//alias,id"]
+    args = ["examples/tings3.csv", "--replacex", r"[A-Z]", "X", "alias,id"]
     res = runcli(args)
     assert res.stdout.splitlines() == [
         "id,name,alias",
