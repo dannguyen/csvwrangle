@@ -1,10 +1,19 @@
 # TODOS
 
 ### Current status
-- fixed cli.main to handle options with more than 1 arg
-    - OpThing is now a custom but functionally empty ParamType subclass
-- figure out more pandas functionality to add
 
+- fixed cli.main to handle options with more than 1 arg
+- [x] OpThing is now a custom but functionally empty ParamType subclass
+    - [x] and that's why it's now been removed in favor of WrangleOption
+- WrangleOption
+    - [x] automatically sets `multiple=True`
+    - [ ] currently treats everything as string type
+- WrangleCommand
+    - [ ] figure out how to use OptionParser.parse_args to preserve option order
+
+
+- figure out more pandas functionality to add
+    - [x] head/tail
 
 ### References/things to read
 - https://medium.com/towards-artificial-intelligence/how-i-wrangle-data-at-the-command-line-17ad48faf699

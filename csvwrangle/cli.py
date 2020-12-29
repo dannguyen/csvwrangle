@@ -14,7 +14,7 @@ from typing import (
 
 from csvwrangle.frame import CFrame
 from csvwrangle.op import build_operation
-from csvwrangle.utils.sysio import clout, clerr, print_version
+from csvwrangle import __version__
 
 
 class WrangleCommand(click.Command):
@@ -26,12 +26,41 @@ class WrangleCommand(click.Command):
         standalone_mode=True,
         **extra,
     ):
-
         if args is None:
             self.orgargs = sys.argv[1:]
         else:
             self.orgargs = list(args)
         return super().main(args, prog_name, complete_var, standalone_mode, **extra)
+
+    def parse_args(self, ctx, args):
+        if not args and self.no_args_is_help and not ctx.resilient_parsing:
+            echo(ctx.get_help(), color=ctx.color)
+            ctx.exit()
+
+        self.wrangle_ops = self.extract_wrangle_ops(ctx, args.copy())
+        return super().parse_args(ctx, args)
+
+    def extract_wrangle_ops(self, ctx, raw_args: ListType) -> ListType[dict]:
+        parsed_params: DictType[str, str]
+        leftovers: ListType
+        ordered_params: ListType[UnionType[click.Argument, click.Option, WrangleOption]]
+        ordered_ops: ListType[WrangleOption]
+
+        parser = ctx.command.make_parser(ctx)
+        parsed_params, leftovers, ordered_params = parser.parse_args(args=raw_args)
+        ordered_ops = [p for p in ordered_params if isinstance(p, WrangleOption)]
+
+        opslist = []
+
+        for i, op in enumerate(ordered_ops):
+            opname = op.name
+            params = parsed_params[opname]
+            opargs = params.pop(0)
+            opargs = opargs if isinstance(opargs, tuple) else (opargs,)
+            d = {"name": opname, "op_args": opargs, "index": i}
+            opslist.append(d)
+
+        return opslist
 
 
 class WrangleOption(click.Option):
@@ -39,6 +68,51 @@ class WrangleOption(click.Option):
         kwargs["multiple"] = True
         super().__init__(*args, **kwargs)
         self.opname = self.metavar
+
+
+class Printer:
+    def __init__(self, verbose: bool = False):
+        self.verbose = verbose
+
+    def debug(self, content, **kwargs):
+        if self.is_verbose:
+            kwargs["fg"] = kwargs.get("fg") or "cyan"
+            kwargs["err"] = True
+            self.outs(content, **kwargs)
+
+    def info(self, content, **kwargs):
+        if self.is_verbose:
+            kwargs["fg"] = kwargs.get("fg") or "green"
+            kwargs["err"] = True
+            self.outs(content, **kwargs)
+
+    def outs(self, content, **kwargs):
+        list_mode = kwargs.pop("as_list", False)
+
+        if list_mode and isinstance(content, (list, tuple)):
+            for c in content:
+                click.secho(str(c), **kwargs)
+
+        else:
+            click.secho(str(content), **kwargs)
+
+    @property
+    def is_verbose(self):
+        return self.verbose is True
+
+
+def print_version(ctx=None, param=None, value=None) -> NoReturnType:
+    """
+    https://click.palletsprojects.com/en/3.x/options/#callbacks-and-eager-options
+    """
+    if not ctx:
+        click.echo(__version__)
+    else:
+        # this is being used as a callback
+        if not value or ctx.resilient_parsing:
+            return
+        click.echo(__version__)
+        ctx.exit()
 
 
 @click.command(
@@ -82,13 +156,6 @@ class WrangleOption(click.Option):
     help="""Do a pandas.DataFrame.query:""",
 )
 @click.option(
-    "--version",
-    callback=print_version,
-    is_eager=True,
-    is_flag=True,
-    help="Print the version of csvwrangle",
-)
-@click.option(
     "--tail",
     nargs=1,
     cls=WrangleOption,
@@ -103,42 +170,45 @@ class WrangleOption(click.Option):
     # file_okay=True,
     # dir_okay=False,
 )
+@click.option(
+    "--version",
+    callback=print_version,
+    is_eager=True,
+    is_flag=True,
+    help="Print the version of csvwrangle",
+)
+@click.option(
+    "--verbose",
+    is_flag=True,
+    help="be verbose or not",
+)
 @click.pass_context
 def main(ctx, **kwargs):
     """
     csvwrangle (cvr) is a command-line tool for wrangling data with Pandas
     """
     # import IPython; IPython.embed()
+    PRINT = Printer(verbose=kwargs["verbose"])
 
-    # click.secho(f'opening {kwargs["input_file"]}...', err=True, fg="red")
+    PRINT.info(f'opening {kwargs["input_file"]}...')
     cf = CFrame(kwargs["input_file"])
-    # click.secho("Original data", fg="green", err=True)
-    # click.secho(cf.to_csv(), fg="cyan", err=True)
 
-    opslist = extract_ops_from_raw_args(ctx=ctx, raw_args=ctx.command.orgargs.copy())
-    # click.secho(f"{len(opslist)} operations", fg="red", err=True)
-    for x in opslist:
-        op = build_operation(name=x["name"], op_args=x["op_args"])
-        #        click.secho(str(op), fg="cyan", err=True)
+    PRINT.info("Original data")
+    PRINT.debug(cf.to_csv())
+
+    wrangle_ops = ctx.command.wrangle_ops
+    PRINT.debug(f"{len(wrangle_ops)} operations:")
+    PRINT.debug(wrangle_ops, as_list=True)
+    PRINT.debug("")
+
+    for w in wrangle_ops:
+        op = build_operation(name=w["name"], op_args=w["op_args"])
+        PRINT.info(op)
         cf.execute(op)
-        #  click.secho(cf.to_csv(), fg="cyan", err=True)
+        PRINT.debug(cf.to_csv())
 
-    # click.secho("Final", fg="green", err=True)
-    click.echo(cf.to_csv(), nl=False)
-
-
-def extract_ops_from_raw_args(ctx, raw_args: ListType) -> ListType[dict]:
-    opslist = []
-    cmd_options = [o for o in ctx.command.params if isinstance(o, WrangleOption)]
-
-    for i, rawarg in enumerate(raw_args):
-        the_param = next((c for c in cmd_options if rawarg in c.opts), None)
-        if the_param:
-            the_args = raw_args[i + 1 : i + 1 + the_param.nargs]
-            d = {"name": the_param.name, "op_args": the_args, "index": i}
-            opslist.append(d)
-
-    return opslist
+    PRINT.info("Final data", fg="green")
+    PRINT.outs(cf.to_csv(), nl=False)
 
 
 if __name__ == "__main__":

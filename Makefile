@@ -56,11 +56,11 @@ black: lint
 
 
 test: ## run all tests with the default Python
-	pytest -x tests/unit tests/vizzes tests/integration
+	pytest -vx tests
 
-unittest:
-	## run tests, open interactive debugger at first failure, and then quit
-	pytest tests/unit
+# unittest:
+# 	## run tests, open interactive debugger at first failure, and then quit
+# 	pytest tests/unit
 
 test-all: ## run tests on every Python version with tox
 	tox
