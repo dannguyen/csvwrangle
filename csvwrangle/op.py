@@ -14,6 +14,7 @@ from csvwrangle.exceptions import InvalidOperationName
 
 class Operation:
     name = "generic"
+    is_inplace = True  # whether the operation is inplace type
 
     def __init__(self, op_args):
         # TK remove index, not needed at this point?
@@ -32,6 +33,8 @@ class Operation:
 
 
 class BaseOp(Operation):
+    """not sure why I have this"""
+
     pass
 
 
@@ -52,6 +55,24 @@ class Dropna(BaseOp):
         arg = self.op_args[0]
         cols = None if arg == "*" else arg.split(",")
         df.dropna(subset=cols, inplace=True)
+
+
+class Head(BaseOp):
+    name = "head"
+    is_inplace = False
+
+    def func_apply(self, df):
+        n = int(self.op_args[0])
+        return df.head(n)
+
+
+class Tail(BaseOp):
+    name = "tail"
+    is_inplace = False
+
+    def func_apply(self, df):
+        n = int(self.op_args[0])
+        return df.tail(n)
 
 
 class Query(BaseOp):

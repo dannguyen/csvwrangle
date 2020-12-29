@@ -22,7 +22,6 @@ def test_dropna_stdin():
 
 def test_dropna_no_matches():
     res = runcli(["--dropna", "name,amount", "examples/tings.csv"])
-
     assert res.stdout.splitlines() == [
         "name,amount",
         "Alice,20",

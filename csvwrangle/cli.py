@@ -16,8 +16,6 @@ from csvwrangle.frame import CFrame
 from csvwrangle.op import build_operation
 from csvwrangle.utils.sysio import clout, clerr, print_version
 
-OPS_PARAMS = []
-
 
 class WrangleCommand(click.Command):
     def main(
@@ -36,59 +34,51 @@ class WrangleCommand(click.Command):
         return super().main(args, prog_name, complete_var, standalone_mode, **extra)
 
 
-class OpThing(click.ParamType):
-    pass
-    # def convert(self, value, param, ctx):
-    #     ctx.obj = ctx.obj or []
-    #     ctx.obj.append((param, value))
-    #     # OPS_LIST.append({
-    #     #         'name': param.name, 'args': value
-    #     #     })
-    #     return value
+class WrangleOption(click.Option):
+    def __init__(self, *args, **kwargs):
+        kwargs["multiple"] = True
+        super().__init__(*args, **kwargs)
+        self.opname = self.metavar
 
 
 @click.command(
     cls=WrangleCommand,
-    epilog="the end...?",
+    epilog="the epilog...?",
     no_args_is_help=True,
 )
 @click.option(
     "--hello",
-    metavar="hello",
+    cls=WrangleOption,
     nargs=1,
-    type=OpThing(),
-    multiple=True,
     help="""nullfun""",
 )
 @click.option(
     "--dropna",
-    metavar="dropna",
+    cls=WrangleOption,
     nargs=1,
-    type=OpThing(),
-    multiple=True,
     help="""Do a pandas.DataFrame.replace:""",
 )
 @click.option(
+    "--head",
+    nargs=1,
+    cls=WrangleOption,
+    help="""head TK""",
+)
+@click.option(
     "--replacex",
-    metavar="replacex",
-    type=OpThing(),
-    multiple=True,
+    cls=WrangleOption,
     nargs=3,
     help="""Do a pandas.DataFrame.replace:""",
 )
 @click.option(
     "--sortby",
-    metavar="sortby",
-    type=OpThing(),
-    multiple=True,
+    cls=WrangleOption,
     help="""Do a pandas.DataFrame.sort_values:""",
 )
 @click.option(
     "--query",
     "-q",
-    metavar="query",
-    type=OpThing(),
-    multiple=True,
+    cls=WrangleOption,
     help="""Do a pandas.DataFrame.query:""",
 )
 @click.option(
@@ -97,6 +87,12 @@ class OpThing(click.ParamType):
     is_eager=True,
     is_flag=True,
     help="Print the version of csvwrangle",
+)
+@click.option(
+    "--tail",
+    nargs=1,
+    cls=WrangleOption,
+    help="""head TK""",
 )
 @click.argument(
     "input_file",
@@ -120,7 +116,6 @@ def main(ctx, **kwargs):
     # click.secho(cf.to_csv(), fg="cyan", err=True)
 
     opslist = extract_ops_from_raw_args(ctx=ctx, raw_args=ctx.command.orgargs.copy())
-
     # click.secho(f"{len(opslist)} operations", fg="red", err=True)
     for x in opslist:
         op = build_operation(name=x["name"], op_args=x["op_args"])
@@ -134,7 +129,7 @@ def main(ctx, **kwargs):
 
 def extract_ops_from_raw_args(ctx, raw_args: ListType) -> ListType[dict]:
     opslist = []
-    cmd_options = [o for o in ctx.command.params if isinstance(o.type, OpThing)]
+    cmd_options = [o for o in ctx.command.params if isinstance(o, WrangleOption)]
 
     for i, rawarg in enumerate(raw_args):
         the_param = next((c for c in cmd_options if rawarg in c.opts), None)
