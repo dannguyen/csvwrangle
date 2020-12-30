@@ -34,33 +34,37 @@ class WrangleCommand(click.Command):
 
     def parse_args(self, ctx, args):
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
-            echo(ctx.get_help(), color=ctx.color)
+            click.echo(ctx.get_help(), color=ctx.color)
             ctx.exit()
 
         self.wrangle_ops = self.extract_wrangle_ops(ctx, args.copy())
         return super().parse_args(ctx, args)
 
     def extract_wrangle_ops(self, ctx, raw_args: ListType) -> ListType[dict]:
-        parsed_params: DictType[str, str]
+        parsed_opts: DictType[str, str]
         leftovers: ListType
         ordered_params: ListType[UnionType[click.Argument, click.Option, WrangleOption]]
         ordered_ops: ListType[WrangleOption]
 
         parser = ctx.command.make_parser(ctx)
-        parsed_params, leftovers, ordered_params = parser.parse_args(args=raw_args)
-        ordered_ops = [p for p in ordered_params if isinstance(p, WrangleOption)]
+        parsed_opts, leftovers, ordered_params = parser.parse_args(args=raw_args.copy())
+        ordered_operations = [p for p in ordered_params if isinstance(p, WrangleOption)]
 
-        opslist = []
-
-        for i, op in enumerate(ordered_ops):
+        operations = []
+        xopts = parsed_opts.copy()
+        for i, op in enumerate(ordered_operations):
             opname = op.name
-            params = parsed_params[opname]
-            opargs = params.pop(0)
-            opargs = opargs if isinstance(opargs, tuple) else (opargs,)
-            d = {"name": opname, "op_args": opargs, "index": i}
-            opslist.append(d)
+            params = parsed_opts[opname]
+            argvals = params.pop(0)
+            if op.nargs > 1:
+                opargs = tuple(op.type(v) for v in argvals)
+            else:
+                opargs = (op.type(argvals),)
 
-        return opslist
+            d = {"name": opname, "op_args": opargs, "index": i}
+            operations.append(d)
+
+        return operations
 
 
 class WrangleOption(click.Option):
@@ -117,55 +121,94 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
 
 @click.command(
     cls=WrangleCommand,
-    epilog="the epilog...?",
+    # epilog="the epilog...?",
     no_args_is_help=True,
 )
 @click.option(
     "--hello",
     cls=WrangleOption,
     nargs=1,
+    hidden=True,
     help="""nullfun""",
 )
 @click.option(
     "--dropna",
     cls=WrangleOption,
     nargs=1,
-    help="""Do a pandas.DataFrame.replace:""",
+    help="""Drop rows that have NaN/NULL values. Pass in a comma-delimited list of column namesto check for NaN/NULL values, or pass in "*" to check all columns """,
+)
+@click.option(
+    "--fillna",
+    cls=WrangleOption,
+    nargs=1,
+    help="""Fill all NaN/NULL values. Pass in a single [STRING] value to apply to all columns. Else, pass in a comma-delimited list of column names, each with a colon and fill value.
+            e.g. 'col1:0,col2:hello,col3:world'
+            """,
+)
+@click.option(
+    "--eval",
+    cls=WrangleOption,
+    nargs=1,
+    help="""
+    Create a new column from operations on the dataframe. Assignment is required, e.g. "newcol = col1 + col2"
+
+    https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.eval.html
+    """,
 )
 @click.option(
     "--head",
-    nargs=1,
     cls=WrangleOption,
-    help="""head TK""",
+    nargs=1,
+    type=click.INT,
+    help="""Return the first [INTEGER] rows""",
+)
+@click.option(
+    "--replace",
+    cls=WrangleOption,
+    nargs=3,
+    help="""Do a pandas.DataFrame.replace on complete and literal strings""",
 )
 @click.option(
     "--replacex",
     cls=WrangleOption,
     nargs=3,
-    help="""Do a pandas.DataFrame.replace:""",
+    help="""Do a pandas.DataFrame.replace on regexes""",
+)
+@click.option(
+    "--round",
+    cls=WrangleOption,
+    nargs=1,
+    type=click.STRING,
+    help="""Pass in a comma-delimited list of column names (or '*' for all) to round numerical values.
+        Specify the number of decimal places per column with a colon, e.g. 'col1,col2:1,col3:4'  """,
 )
 @click.option(
     "--sortby",
     cls=WrangleOption,
-    help="""Do a pandas.DataFrame.sort_values:""",
+    nargs=1,
+    type=click.STRING,
+    help="""Pass in comma-delimited list of column names to sort by. Specify sort direction per column with a colon followed by
+            'asc' or 'desc', e.g. 'col1,col2:desc,col3:asc' """,
 )
 @click.option(
     "--query",
     "-q",
     cls=WrangleOption,
-    help="""Do a pandas.DataFrame.query:""",
+    type=click.STRING,
+    help="""Pass in a conditional expression to filter rows by, e.g.  'col1 > col2 & col3 == "yes"' """,
 )
 @click.option(
     "--tail",
-    nargs=1,
     cls=WrangleOption,
-    help="""head TK""",
+    nargs=1,
+    type=click.INT,
+    help="""Return the last [INTEGER] rows""",
 )
 @click.argument(
     "input_file",
-    type=click.File("r"),
     default=sys.stdin,
     required=True,
+    type=click.File("r"),
     # exists=True,
     # file_okay=True,
     # dir_okay=False,
@@ -204,6 +247,8 @@ def main(ctx, **kwargs):
     for w in wrangle_ops:
         op = build_operation(name=w["name"], op_args=w["op_args"])
         PRINT.info(op)
+
+        # modify dataframe
         cf.execute(op)
         PRINT.debug(cf.to_csv())
 

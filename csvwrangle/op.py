@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from pathlib import Path
 from typing import (
@@ -9,7 +10,7 @@ from typing import (
     Union as UnionType,
 )
 
-from csvwrangle.exceptions import InvalidOperationName
+from csvwrangle.exceptions import *
 
 
 class Operation:
@@ -57,12 +58,77 @@ class Dropna(BaseOp):
         df.dropna(subset=cols, inplace=True)
 
 
+class Fillna(BaseOp):
+    """
+    https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.fillna.html
+
+    example:
+        csvwrangle --fillna 0
+                   --fillna col1:0,col2:9
+    """
+
+    name = "fillna"
+
+    def func_apply(self, df: pd.DataFrame) -> NoReturnType:
+        def _typecast(val: str, ctype: np.dtype) -> UnionType[str, int, float]:
+            rval = None
+            typename = ctype.name
+            if "int" in typename:
+                try:
+                    rval = int(val)
+                except ValueError:
+                    try:
+                        rval = float(val)
+                    except ValueError:
+                        rval = val
+            elif "float" in typename:
+                try:
+                    rval = float(val)
+                except ValueError:
+                    rval = val
+            else:
+                rval = str(val)
+
+            return rval
+
+        cols = self.op_args[0].split(",")
+        # TK: use more robust parsing for this
+        fillvals = {}
+        if len(cols) == 1 and ":" not in cols[0]:
+            # user passed in single val, for filling all NA values
+            val = cols[0]
+            for cname in df.columns:
+                ctype = df[cname].dtype
+                fillvals[cname] = _typecast(val, ctype)
+        else:
+            for c in cols:
+                # TK more robust parsing
+                cname, val = c.split(":")
+                ctype = df[cname].dtype
+                fillvals[cname] = _typecast(val, ctype)
+
+        df.fillna(value=fillvals, inplace=True)
+
+
+class Eval(BaseOp):
+    name = "eval"
+
+    def func_apply(self, df: pd.DataFrame) -> NoReturnType:
+        arg = self.op_args[0]
+        try:
+            df.eval(expr=arg, inplace=True)
+        except ValueError as err:
+            raise MissingAssignment(
+                f"eval expects the expression to have an assignment, e.g.\n\t newcol = {arg}"
+            )
+
+
 class Head(BaseOp):
     name = "head"
     is_inplace = False
 
     def func_apply(self, df):
-        n = int(self.op_args[0])
+        n = self.op_args[0]
         return df.head(n)
 
 
@@ -70,7 +136,7 @@ class Tail(BaseOp):
     name = "tail"
     is_inplace = False
 
-    def func_apply(self, df):
+    def func_apply(self, df) -> pd.DataFrame:
         n = int(self.op_args[0])
         return df.tail(n)
 
@@ -83,22 +149,67 @@ class Query(BaseOp):
         df.query(expr=expr, inplace=True)
 
 
-class Replacex(BaseOp):
+class Replace(BaseOp):
+    name = "replace"
+
+    def build_args(self, df: pd.DataFrame) -> DictType:
+        rx, rval, cx = self.op_args
+        cols: ListType[str] = (
+            df.columns if cx == "*" else cx.split(",")
+        )  # TK more robust parsing
+        reps: DictType = {cname: rx for cname in cols}
+        vals: DictType = {cname: rval for cname in cols}
+        return {
+            "to_replace": reps,
+            "value": vals,
+            "inplace": True,
+            "regex": False,
+        }
+
+    def func_apply(self, df: pd.DataFrame) -> NoReturnType:
+        kargs = self.build_args(df)
+        df.replace(**kargs)
+
+
+class Replacex(Replace):
     name = "replacex"
 
     def func_apply(self, df: pd.DataFrame) -> NoReturnType:
-        rx, rval, cols = self.op_args
-        if cols == "*":
-            func = lambda df: df.replace(regex=rx, value=rval, inplace=True)
-        else:
-            cols = cols.split(",")
-            to_reps: dict = {cname: rx for cname in cols}
-            to_vals: dict = {cname: rval for cname in cols}
-            func = lambda df: df.replace(
-                to_replace=to_reps, value=to_vals, regex=True, inplace=True
-            )
+        kargs = self.build_args(df)
+        kargs["regex"] = True
+        df.replace(**kargs)
+        # rx, rval, cols = self.op_args
+        # if cols == "*":
+        #     func = lambda df: df.replace(regex=rx, value=rval, inplace=True)
+        # else:
+        #     cols = cols.split(",")
+        #     to_reps: dict = {cname: rx for cname in cols}
+        #     to_vals: dict = {cname: rval for cname in cols}
+        #     func = lambda df: df.replace(
+        #         to_replace=to_reps, value=to_vals, regex=True, inplace=True
+        #     )
 
-        func(df)
+        # func(df)
+
+
+class Round(BaseOp):
+    """https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.round.html"""
+
+    name = "round"
+    is_inplace = False
+
+    def func_apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        arg = self.op_args[0]
+        if arg == "*":
+            return df.round()
+        else:
+            decs = {}
+            for a in arg.split(","):
+                name, *digits = a.split(":", 1)
+                digits = int(digits[0]) if digits else 0
+                decs[name] = digits
+
+        return df.round(decimals=decs)
 
 
 class Sortby(BaseOp):

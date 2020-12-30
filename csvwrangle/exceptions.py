@@ -4,3 +4,7 @@ class CSVWrangleError(Exception):
 
 class InvalidOperationName(KeyError, CSVWrangleError):
     pass
+
+
+class MissingAssignment(CSVWrangleError):
+    pass

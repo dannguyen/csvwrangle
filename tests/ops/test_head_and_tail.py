@@ -12,10 +12,10 @@ def test_head_basic():
 
 
 def test_head_non_integer():
-    with pytest.raises(ValueError) as err:
-        res = runcli(["--head", "a", "examples/dummy.csv"])
-
-    assert """invalid literal for int() with base 10: 'a'""" in str(err.value)
+    # with pytest.raises(ValueError) as err:
+    res = runcli(["--head", "a", "examples/dummy.csv"])
+    assert res.exit_code == 2
+    assert "Invalid value: a is not a valid integer" in res.stderr
 
 
 def test_tail_basic():
@@ -28,7 +28,15 @@ def test_tail_basic():
 
 
 def test_tail_non_integer():
-    with pytest.raises(ValueError) as err:
-        res = runcli(["--tail", "a", "examples/dummy.csv"])
+    res = runcli(["--tail", "a", "examples/dummy.csv"])
+    assert res.exit_code == 2
+    assert "Invalid value: a is not a valid integer" in res.stderr
 
-    assert """invalid literal for int() with base 10: 'a'""" in str(err.value)
+
+def test_head_tail_combo():
+    res = runcli(["--tail", "3", "--head", "2", "--tail", "2", "examples/dummy.csv"])
+    assert res.stdout.splitlines() == [
+        "X,Y",
+        "b,2",
+        "c,3",
+    ]

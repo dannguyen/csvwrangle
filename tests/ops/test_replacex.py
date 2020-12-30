@@ -2,7 +2,7 @@ import pytest
 from tests.tutils import runcli
 
 
-def test_sed_default():
+def test_replacex_default():
     args = ["examples/tings2.csv", "--replacex", r"\d+|\w{5,}", "HEY", "*"]
     res = runcli(args)
     assert res.stdout.splitlines() == [
@@ -15,7 +15,7 @@ def test_sed_default():
     ]
 
 
-def test_sed_on_cols():
+def test_replacex_on_cols():
     args = ["examples/tings3.csv", "--replacex", r"[A-Z]", "X", "alias,id"]
     res = runcli(args)
     assert res.stdout.splitlines() == [

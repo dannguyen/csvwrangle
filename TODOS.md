@@ -1,19 +1,53 @@
 # TODOS
 
-### Current status
+## For 0.5 release
 
-- fixed cli.main to handle options with more than 1 arg
-- [x] OpThing is now a custom but functionally empty ParamType subclass
-    - [x] and that's why it's now been removed in favor of WrangleOption
-- WrangleOption
-    - [x] automatically sets `multiple=True`
-    - [ ] currently treats everything as string type
-- WrangleCommand
-    - [ ] figure out how to use OptionParser.parse_args to preserve option order
+- [x] fillna
+- [?] replace (no regex)
+    - [x] basic tests
+    - [ ] consider changing replace/replacex signature
+- [ ] just-text
+- [ ] proper comma-delimited parsing
+- [ ] change `--` to `-`, like `find` syntax
 
 
+
+## Future 
+
+- [ ] change query to filter
+- [ ] update: query + eval
+    https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.update.html
+    ```py
+    import pandas as pd
+    df = pd.DataFrame([['a', 1], ['b', 2], ['c', 3], ['d', 4]], columns=['name', 'val'])
+    sf = df.query('val > 2').replace()
+    sf[['name']] = sf['name'] + ' is big'
+    ```
+
+- CFrame should keep state
+
+
+- studying `groupby` and aggregates
+    - https://realpython.com/pandas-groupby/
+    - https://pandas.pydata.org/pandas-docs/stable/user_guide/groupby.html#group-by-split-apply-combine
+- eval/assign for simple calculations: https://jakevdp.github.io/PythonDataScienceHandbook/03.12-performance-eval-and-query.html
+
+- calculation-type methods
+    
+    - `--round 'col1,col2:1,col3:0:just_ints'`
+        - https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.round.html?highlight=round#pandas.DataFrame.round
+        - support `--round *:decimalplaces[int]` (e.g. round all columns to decimalplaces)
+
+- each WrangleOption should itself figure out what Operation to use, e.g. kill op.build_operation
+- consider making input_file require `-i/--input`, and allowing WrangleOption to accept varadic nargs: https://stackoverflow.com/a/48394004/160863
+    - or: consider making every option 1 arg
+        - `--replacex '`a|b|c` `REPL` `cols`'`
 - figure out more pandas functionality to add
+    - https://pandas.pydata.org/pandas-docs/stable/reference/frame.html
     - [x] head/tail
+    - [?] round 
+    - [?] calculation ops that add new column
+
 
 ### References/things to read
 - https://medium.com/towards-artificial-intelligence/how-i-wrangle-data-at-the-command-line-17ad48faf699
@@ -42,22 +76,14 @@
 - [x] cli uses CFrame class to import data
 - [x] cli uses CFrame.process_pipe to iterate through ops and yield meta and data
 - [ ] DRY up `inplace` setting
-- [ ] unit tests
+- [a...] unit tests
 
 ## cli stuff
 
 - import stuff
-    - [ ] let user specify data types
-
-- make Click.Option subclass for operation specific flags
-
-## --verbose
-
-- output the name/expr of each op, and the effect on the dataset, to stderr
+    - [] let user specify data types
 
 
-## --zeta option
-- replace `--zeta [foo] [expr]` option with proper `--query` `--sort` etc
 
 
 ## --info option
@@ -91,6 +117,16 @@
 ### done
 
 
+- [x] fixed cli.main to handle options with more than 1 arg
+- [x] OpThing is now a custom but functionally empty ParamType subclass
+    - [x] and that's why it's now been removed in favor of WrangleOption
+- WrangleOption
+    - [x] automatically sets `multiple=True`
+    - currently treats everything as string type
+        - [x] WrangleCommand.extract_wrangle_ops now respects Option.type
+- WrangleCommand
+    - [x] figure out how to use OptionParser.parse_args to preserve option order
+
 - query: https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html
 - dropna: 
     - https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.dropna.html#pandas.DataFrame.dropna
@@ -110,3 +146,8 @@
   - [x] **tests/test_cli:test_hello indicates that context isn't being shared as expected...**
     - because when running pytest, sys.argv will be: `['pytest', 'tests/test_cli.py', '-v']` 
     - [x] resolved: created custom WrangleCommand that has orgargs (will ask in Click github issues)
+
+- [x] --verbose: output the name/expr of each op, and the effect on the dataset, to stderr
+- [x] make Click.Option subclass for operation specific flags
+- [x] kill --zeta: replace `--zeta [foo] [expr]` option with proper `--query` `--sort` etc
+
