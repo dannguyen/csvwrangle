@@ -5,8 +5,10 @@
 - [x] fillna
 - [?] replace (no regex)
     - [x] basic tests
-    - [ ] consider changing replace/replacex signature
-- [ ] just-text
+    - [ ] consider changing replace/replacex signature to: 'col1,col2,col3:pattern//replace'
+- [?] just-text
+- [ ] import as type -- force mixed num/str columns to drop str values or convert to a value
+    - [ ] `--import-as "col1:text,col2:int,col3:"`
 - [ ] proper comma-delimited parsing
 - [ ] change `--` to `-`, like `find` syntax
 

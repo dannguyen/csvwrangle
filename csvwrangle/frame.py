@@ -15,7 +15,10 @@ from csvwrangle.op import Operation
 class CFrame:
     def __init__(self, input_file: UnionType[str, Path], options: DictType = {}):
         self.input_file = input_file
-        self._dataframe = pd.read_csv(self.input_file)
+        if options.get("just_text"):
+            self._dataframe = pd.read_csv(self.input_file, dtype=str)
+        else:
+            self._dataframe = pd.read_csv(self.input_file)
 
     def execute(self, op: Operation) -> NoReturnType:
         # operations are assumed to be inplace functions, but the exceptions have is_inplace=False

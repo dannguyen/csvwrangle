@@ -23,6 +23,6 @@ def test_replacex_on_cols():
         "1X,Alice,Xlpha X0g",
         "2X,Bob,burgerman",
         "3X,Carson,90-210-XXX",
-        "4X,Dina,Xinosaur",
+        "4X,Dina,Xinasaur",
         "5X,Ellie,Xlle",
     ]

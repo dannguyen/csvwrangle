@@ -214,6 +214,12 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
     # dir_okay=False,
 )
 @click.option(
+    "--just-text",
+    metavar="just_text",
+    is_flag=True,
+    help="Import every data column as text",
+)
+@click.option(
     "--version",
     callback=print_version,
     is_eager=True,
@@ -234,7 +240,9 @@ def main(ctx, **kwargs):
     PRINT = Printer(verbose=kwargs["verbose"])
 
     PRINT.info(f'opening {kwargs["input_file"]}...')
-    cf = CFrame(kwargs["input_file"])
+
+    opts = {"just_text": kwargs.get("just_text")}
+    cf = CFrame(kwargs["input_file"], options=opts)
 
     PRINT.info("Original data")
     PRINT.debug(cf.to_csv())
