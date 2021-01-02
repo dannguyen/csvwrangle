@@ -17,6 +17,21 @@ from csvwrangle.op import build_operation
 from csvwrangle import __version__
 
 
+from csvwrangle.parsers import SortbyParser, KeyintParser
+
+
+class WrangleParsedParam(click.ParamType):
+    def __init__(self, parser_cls, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.parser = parser_cls()
+
+    def get_metavar(self, param):
+        return param.name
+
+    def convert(self, value, param, ctx):
+        return self.parser.parse(value)
+
+
 class WrangleCommand(click.Command):
     def main(
         self,
@@ -186,7 +201,7 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
     "--round",
     cls=WrangleOption,
     nargs=1,
-    type=click.STRING,
+    type=WrangleParsedParam(KeyintParser),
     help="""Pass in a comma-delimited list of column names (or '*' for all) to round numerical values.
         Specify the number of decimal places per column with a colon, e.g. 'col1,col2:1,col3:4'  """,
 )
@@ -195,7 +210,7 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
     "--sortby",
     cls=WrangleOption,
     nargs=1,
-    type=click.STRING,
+    type=WrangleParsedParam(SortbyParser),
     help="""Pass in comma-delimited list of column names to sort by. Specify sort direction per column with a colon followed by
             'asc' or 'desc', e.g. 'col1,col2:desc,col3:asc' """,
 )

@@ -29,8 +29,8 @@ class KeyvalParser(MyargParser):
     DEF_TEMPLATE = r"""
 PROPER_NAME: /\w+/
 key : ESCAPED_STRING | PROPER_NAME
-value: {valdef}
-pair : [key (":" value)?]
+val : {valdef}
+pair : [key (":" val)?]
 start: [pair ("," pair)*]
 %import common.ESCAPED_STRING
 """
@@ -47,7 +47,7 @@ start: [pair ("," pair)*]
             else:
                 return s.value
 
-        def value(self, s):
+        def val(self, s):
             return self.key(s)
 
         def pair(self, x):
@@ -57,36 +57,39 @@ start: [pair ("," pair)*]
 class SortbyParser(KeyvalParser):
     VALUE_DEF = "/asc|desc/"
 
-    #     definition = (r"""
-    # PROPER_NAME: /\w+/
-    # column_name : ESCAPED_STRING | PROPER_NAME
-    # direction :  /asc|desc/
-    # pair : [column_name (":" direction)?]
-    # start: [pair ("," pair)*]
-    # %import common.ESCAPED_STRING
-    # """)
+    class Transformer(KeyvalParser.Transformer):
+        def pair(self, x):
+            t = tuple(x)
+            if len(x) == 1:
+                t = t + ("asc",)
+            return t
+
+
+class KeyintParser(KeyvalParser):
+    """
+    --round x,y
+            x:0,y,z:2
+    """
+
+    DEF_TEMPLATE = r"""
+PROPER_NAME: /\w+/
+key : ESCAPED_STRING | PROPER_NAME
+val : {valdef}
+pair : [key (":" val)?]
+start: val | [pair ("," pair)*]
+%import common.ESCAPED_STRING
+%import common.INT
+"""
+    VALUE_DEF = """INT"""
+    # DEF_TEMPLATE = (
+    #         KeyvalParser.DEF_TEMPLATE + '\n%import common.INT')
 
     class Transformer(KeyvalParser.Transformer):
-        # def value(self, s):
-        #     return self.key(s)
-        # def column_name(self, c):
-        #     (c, ) = c
-        #     if c.type == 'PROPER_NAME':
-        #         return c.value
-        #     else:
-        #         return c[1:-1]
-
-        # def direction(self, o):
-        #     (o, ) = o
-        #     return o.value
-
         def pair(self, x):
+            t = tuple(x)
             if len(x) == 1:
-                return tuple(
-                    x
-                    + [
-                        "asc",
-                    ]
-                )
-            else:
-                return tuple(x)
+                t = t + (0,)
+            return t
+
+        def val(self, s) -> int:
+            return int(super().val(s))

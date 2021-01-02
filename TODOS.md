@@ -2,6 +2,16 @@
 
 ## For 0.5 release
 
+- [ ] proper comma-delimited parsing
+    - write a simple parser in Lark: https://lark-parser.readthedocs.io/en/latest/json_tutorial.html
+        - `--replacex 'col1,col2:pattern//replacement'`
+        - SortbyParser
+            - [x] defined and basic test
+            - [x] make as part of ParsedParamType
+        - KeyintParser
+            - [x] defined and basic test
+            - [x] round: make as part of ParsedParamType
+            - [ ] any other ops that use it? 
 - [x] fillna
 - [?] replace (no regex)
     - [x] basic tests
@@ -9,12 +19,6 @@
 - [?] just-text
 - [ ] import as type -- force mixed num/str columns to drop str values or convert to a value
     - [ ] `--import-as "col1:text,col2:int,col3:date"`
-- [ ] proper comma-delimited parsing
-    - write a simple parser in Lark: https://lark-parser.readthedocs.io/en/latest/json_tutorial.html
-        - `--replacex 'col1,col2:pattern//replacement'`
-        - SortbyParser
-            - [x] defined and basic test
-            - [ ] make part of Click Type/formatter
 - [x] add autocompletion
     - seems to be built-in by default...? https://click.palletsprojects.com/en/7.x/bashcomplete/
 -  change `--` to `-`, like `find` syntax

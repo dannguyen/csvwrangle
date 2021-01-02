@@ -199,15 +199,18 @@ class Round(BaseOp):
     is_inplace = False
 
     def func_apply(self, df: pd.DataFrame) -> pd.DataFrame:
-        arg = self.op_args[0]
-        if arg == "*":
-            return df.round()
+        opargs = self.op_args[0]  # TK: make all op_args assume 1 narg
+        if isinstance(opargs[0], int):
+            # when user passes in a single int, we assume they want to round
+            # all columns to int number of digits
+            return df.round(opargs[0])
         else:
-            decs = {}
-            for a in arg.split(","):
-                name, *digits = a.split(":", 1)
-                digits = int(digits[0]) if digits else 0
-                decs[name] = digits
+            # we assume user passed in key-value pairs of column_name:digits_to_round
+            decs = {c: d for c, d in opargs}
+            # for a in arg.split(","):
+            #     name, *digits = a.split(":", 1)
+            #     digits = int(digits[0]) if digits else 0
+            #     decs[name] = digits
 
         return df.round(decimals=decs)
 
@@ -216,14 +219,16 @@ class Sortby(BaseOp):
     name = "sortby"
 
     def func_apply(self, df: pd.DataFrame) -> NoReturnType:
-
-        cols = []
-        ascs = []
-        for arg in self.op_args[0].split(","):
-            c, *a = arg.split(":", 1)
-            cols.append(c)
-            a = a[0] if a else "asc"
-            ascs.append(a != "desc")
+        # cols = []
+        # ascs = []
+        # for arg in self.op_args[0].split(","):
+        #     c, *a = arg.split(":", 1)
+        #     cols.append(c)
+        #     a = a[0] if a else "asc"
+        #     ascs.append(a != "desc")
+        opargs = self.op_args[0]  # TK: make all op_args assume 1 narg
+        cols = [o[0] for o in opargs]
+        ascs = [o[1] != "desc" for o in opargs]
 
         df.sort_values(by=cols, ascending=ascs, inplace=True)
 
