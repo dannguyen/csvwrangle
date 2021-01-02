@@ -8,9 +8,17 @@
     - [ ] consider changing replace/replacex signature to: 'col1,col2,col3:pattern//replace'
 - [?] just-text
 - [ ] import as type -- force mixed num/str columns to drop str values or convert to a value
-    - [ ] `--import-as "col1:text,col2:int,col3:"`
+    - [ ] `--import-as "col1:text,col2:int,col3:date"`
 - [ ] proper comma-delimited parsing
-- [ ] change `--` to `-`, like `find` syntax
+    - write a simple parser in Lark: https://lark-parser.readthedocs.io/en/latest/json_tutorial.html
+        - `--replacex 'col1,col2:pattern//replacement'`
+        - SortbyParser
+            - [x] defined and basic test
+            - [ ] make part of Click Type/formatter
+- [x] add autocompletion
+    - seems to be built-in by default...? https://click.palletsprojects.com/en/7.x/bashcomplete/
+-  change `--` to `-`, like `find` syntax
+    - [x] making double-dash optional
 
 
 

@@ -12,6 +12,7 @@ import csvwrangle as SETTINGS
 
 install_requirements = [
     "Click>=7.0",
+    "lark-parser",
     "pandas>=1.1",
 ]
 

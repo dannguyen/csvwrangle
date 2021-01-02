@@ -125,6 +125,7 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
     no_args_is_help=True,
 )
 @click.option(
+    "-hello",
     "--hello",
     cls=WrangleOption,
     nargs=1,
@@ -132,12 +133,14 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
     help="""nullfun""",
 )
 @click.option(
+    "-dropna",
     "--dropna",
     cls=WrangleOption,
     nargs=1,
     help="""Drop rows that have NaN/NULL values. Pass in a comma-delimited list of column namesto check for NaN/NULL values, or pass in "*" to check all columns """,
 )
 @click.option(
+    "-fillna",
     "--fillna",
     cls=WrangleOption,
     nargs=1,
@@ -146,6 +149,7 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
             """,
 )
 @click.option(
+    "-eval",
     "--eval",
     cls=WrangleOption,
     nargs=1,
@@ -156,6 +160,7 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
     """,
 )
 @click.option(
+    "-head",
     "--head",
     cls=WrangleOption,
     nargs=1,
@@ -163,18 +168,21 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
     help="""Return the first [INTEGER] rows""",
 )
 @click.option(
+    "-replace",
     "--replace",
     cls=WrangleOption,
     nargs=3,
     help="""Do a pandas.DataFrame.replace on complete and literal strings""",
 )
 @click.option(
+    "-replacex",
     "--replacex",
     cls=WrangleOption,
     nargs=3,
     help="""Do a pandas.DataFrame.replace on regexes""",
 )
 @click.option(
+    "-round",
     "--round",
     cls=WrangleOption,
     nargs=1,
@@ -183,6 +191,7 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
         Specify the number of decimal places per column with a colon, e.g. 'col1,col2:1,col3:4'  """,
 )
 @click.option(
+    "-sortby",
     "--sortby",
     cls=WrangleOption,
     nargs=1,
@@ -191,6 +200,7 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
             'asc' or 'desc', e.g. 'col1,col2:desc,col3:asc' """,
 )
 @click.option(
+    "-query",
     "--query",
     "-q",
     cls=WrangleOption,
@@ -198,6 +208,7 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
     help="""Pass in a conditional expression to filter rows by, e.g.  'col1 > col2 & col3 == "yes"' """,
 )
 @click.option(
+    "-tail",
     "--tail",
     cls=WrangleOption,
     nargs=1,
@@ -214,12 +225,14 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
     # dir_okay=False,
 )
 @click.option(
+    "-just-text",
     "--just-text",
     metavar="just_text",
     is_flag=True,
     help="Import every data column as text",
 )
 @click.option(
+    "-version",
     "--version",
     callback=print_version,
     is_eager=True,
@@ -227,6 +240,7 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
     help="Print the version of csvwrangle",
 )
 @click.option(
+    "-verbose",
     "--verbose",
     is_flag=True,
     help="be verbose or not",
