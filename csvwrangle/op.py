@@ -49,14 +49,6 @@ class Hello(BaseOp):
         df.insert(1, "bee", [98, 12])
 
 
-class Dropna(BaseOp):
-    name = "dropna"
-
-    def func_apply(self, df: pd.DataFrame) -> NoReturnType:
-        arg = self.op_args[0]
-        cols = None if arg == "*" else arg.split(",")
-        df.dropna(subset=cols, inplace=True)
-
 
 class Fillna(BaseOp):
     """
@@ -64,7 +56,7 @@ class Fillna(BaseOp):
 
     example:
         csvwrangle --fillna 0
-                   --fillna col1:0,col2:9
+                   --fillna col1:0,col2:hey
     """
 
     name = "fillna"

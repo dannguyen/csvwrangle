@@ -2,6 +2,7 @@
 
 ## For 0.5 release
 
+- killed dropna
 - [ ] proper comma-delimited parsing
     - write a simple parser in Lark: https://lark-parser.readthedocs.io/en/latest/json_tutorial.html
         - `--replacex 'col1,col2:pattern//replacement'`
@@ -12,7 +13,9 @@
             - [x] defined and basic test
             - [x] round: make as part of ParsedParamType
             - [ ] any other ops that use it? 
-- [x] fillna
+        - Fillna parser:
+            - [ ] accepts a single value
+            - [ ] accepts a colname but semicolon-second arg is mandatory
 - [?] replace (no regex)
     - [x] basic tests
     - [ ] consider changing replace/replacex signature to: 'col1,col2,col3:pattern//replace'
@@ -24,7 +27,9 @@
 -  change `--` to `-`, like `find` syntax
     - [x] making double-dash optional
 
-
+- `--info`
+    - [x] prints DataFrame.info()
+    - [ ] needs basic testing
 
 ## Future 
 

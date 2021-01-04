@@ -17,7 +17,7 @@ from csvwrangle.op import build_operation
 from csvwrangle import __version__
 
 
-from csvwrangle.parsers import SortbyParser, KeyintParser
+from csvwrangle.parsers import SortbyParser, KeyintParser, KeyvalParser
 
 
 class WrangleParsedParam(click.ParamType):
@@ -147,20 +147,17 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
     hidden=True,
     help="""nullfun""",
 )
-@click.option(
-    "-dropna",
-    "--dropna",
-    cls=WrangleOption,
-    nargs=1,
-    help="""Drop rows that have NaN/NULL values. Pass in a comma-delimited list of column namesto check for NaN/NULL values, or pass in "*" to check all columns """,
-)
+
 @click.option(
     "-fillna",
     "--fillna",
     cls=WrangleOption,
     nargs=1,
-    help="""Fill all NaN/NULL values. Pass in a single [STRING] value to apply to all columns. Else, pass in a comma-delimited list of column names, each with a colon and fill value.
-            e.g. 'col1:0,col2:hello,col3:world'
+    # type=WrangleParsedParam(FillnaParser),
+
+    help="""Fill all NaN/NULL values. Pass in a single [STRING] value to apply to all columns.
+    Else, pass in a comma-delimited list of key-value pairs: "column_name:fill_value"
+            e.g. 'col_1:0,col_2:hello,col_3:world'
             """,
 )
 @click.option(
@@ -246,6 +243,14 @@ def print_version(ctx=None, param=None, value=None) -> NoReturnType:
     is_flag=True,
     help="Import every data column as text",
 )
+
+@click.option(
+    "-info",
+    "--info",
+    # is_eager=True,
+    is_flag=True,
+    help="print info TK",
+)
 @click.option(
     "-version",
     "--version",
@@ -272,6 +277,11 @@ def main(ctx, **kwargs):
 
     opts = {"just_text": kwargs.get("just_text")}
     cf = CFrame(kwargs["input_file"], options=opts)
+
+    if kwargs.get('info'):
+        print('hi')
+        cf.df.info(buf=sys.stdout)
+        ctx.exit()
 
     PRINT.info("Original data")
     PRINT.debug(cf.to_csv())

@@ -93,3 +93,10 @@ start: val | [pair ("," pair)*]
 
         def val(self, s) -> int:
             return int(super().val(s))
+
+
+class FillnaParser(MyargParser):
+    pass
+
+class ReplaceParser(MyargParser):
+    pass
